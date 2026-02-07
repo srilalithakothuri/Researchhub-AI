@@ -38,6 +38,36 @@ const TasksPage = () => {
         loadStats();
     }, []);
 
+    useEffect(() => {
+        if (tasks.length > 0 && Notification.permission !== 'denied') {
+            checkReminders();
+        }
+    }, [tasks]);
+
+    const checkReminders = async () => {
+        if (Notification.permission === 'default') {
+            await Notification.requestPermission();
+        }
+
+        if (Notification.permission === 'granted') {
+            const now = new Date();
+            tasks.forEach(task => {
+                if (!task.completed && task.due_date) {
+                    const due = new Date(task.due_date);
+                    const diffTime = due.getTime() - now.getTime();
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                    if (diffDays === 1 || diffDays === 2) {
+                        new Notification('Task Reminder', {
+                            body: `"${task.title}" is due in ${diffDays} day${diffDays > 1 ? 's' : ''}!`,
+                            icon: '/favicon.ico'
+                        });
+                    }
+                }
+            });
+        }
+    };
+
     const loadTasks = async () => {
         try {
             const response = await api.get('/tasks/');
@@ -58,6 +88,10 @@ const TasksPage = () => {
 
     const createTask = async () => {
         if (!newTask.title) return;
+        if (!newTask.due_date) {
+            alert('Due date is mandatory to create a task.');
+            return;
+        }
 
         try {
             await api.post('/tasks/', {
@@ -75,6 +109,10 @@ const TasksPage = () => {
 
     const updateTask = async () => {
         if (!editingTask || !editingTask.title) return;
+        if (!editingTask.due_date) {
+            alert('Due date is mandatory.');
+            return;
+        }
 
         try {
             await api.put(`/tasks/${editingTask.id}`, {
@@ -123,6 +161,11 @@ const TasksPage = () => {
                 return 'text-gray-400 bg-gray-500/10 border-gray-500/20';
         }
     };
+
+    const sortedTasks = [...tasks].sort((a, b) => {
+        const priorityMap: { [key: string]: number } = { high: 3, medium: 2, low: 1 };
+        return priorityMap[b.priority] - priorityMap[a.priority];
+    });
 
     const getDueDateInfo = (dueDate: string | null) => {
         if (!dueDate) return null;
@@ -256,12 +299,13 @@ const TasksPage = () => {
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <div>
-                                    <label className="block text-sm text-gray-400 mb-2">Due Date</label>
+                                    <label className="block text-sm text-gray-400 mb-2">Due Date *</label>
                                     <input
                                         type="datetime-local"
                                         value={newTask.due_date}
                                         onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
                                         className="w-full bg-black/20 border border-white/10 rounded-lg py-2 px-4 text-white focus:outline-none focus:border-primary/50"
+                                        required
                                     />
                                 </div>
                             </div>
@@ -326,12 +370,13 @@ const TasksPage = () => {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm text-gray-400 mb-2">Due Date</label>
+                                <label className="block text-sm text-gray-400 mb-2">Due Date *</label>
                                 <input
                                     type="datetime-local"
                                     value={editingTask.due_date ? editingTask.due_date.substring(0, 16) : ''}
                                     onChange={(e) => setEditingTask({ ...editingTask, due_date: e.target.value })}
                                     className="w-full bg-black/20 border border-white/10 rounded-lg py-2 px-4 text-white focus:outline-none focus:border-primary/50"
+                                    required
                                 />
                             </div>
                             <div>
@@ -367,7 +412,7 @@ const TasksPage = () => {
 
             {/* Tasks List */}
             <div className="space-y-3">
-                {tasks.map((task) => (
+                {sortedTasks.map((task) => (
                     <motion.div
                         key={task.id}
                         initial={{ opacity: 0, x: -20 }}
@@ -384,39 +429,41 @@ const TasksPage = () => {
                         </button>
 
                         <div className="flex-1 min-w-0">
-                            <h3
-                                className={`font-semibold text-white ${task.completed ? 'line-through opacity-60' : ''
-                                    }`}
-                            >
-                                {task.title}
-                            </h3>
+                            <div className="flex items-center justify-between gap-4">
+                                <h3
+                                    className={`font-semibold text-white truncate ${task.completed ? 'line-through opacity-60' : ''
+                                        }`}
+                                >
+                                    {task.title}
+                                </h3>
+                                {task.due_date && (
+                                    <span className="text-xs text-primary/80 flex items-center gap-1.5 bg-primary/5 px-2 py-1 rounded-lg border border-primary/20 shrink-0">
+                                        <Calendar className="w-3 h-3" />
+                                        {new Date(task.due_date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
+                                    </span>
+                                )}
+                            </div>
+
                             {task.description && (
-                                <p className="text-sm text-gray-400 mt-1">{task.description}</p>
+                                <p className="text-sm text-gray-400 mt-1 line-clamp-1">{task.description}</p>
                             )}
-                            <div className="flex items-center gap-3 mt-2">
+
+                            <div className="flex items-center gap-3 mt-3">
                                 <span
-                                    className={`text-xs px-2 py-1 rounded-full border ${getPriorityColor(
+                                    className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border ${getPriorityColor(
                                         task.priority
                                     )}`}
                                 >
                                     {task.priority}
                                 </span>
-                                {task.due_date && (
-                                    <div className="flex flex-wrap gap-2">
-                                        <span className="text-xs text-primary/80 flex items-center gap-1.5 bg-primary/5 px-2 py-1 rounded-lg border border-primary/20">
-                                            <Calendar className="w-3 h-3" />
-                                            {new Date(task.due_date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
+                                {task.due_date && (() => {
+                                    const info = getDueDateInfo(task.due_date);
+                                    return info && (
+                                        <span className={`text-[10px] font-bold uppercase flex items-center gap-1.5 px-2 py-0.5 rounded-lg border ${info.color}`}>
+                                            {info.text}
                                         </span>
-                                        {(() => {
-                                            const info = getDueDateInfo(task.due_date);
-                                            return info && (
-                                                <span className={`text-xs flex items-center gap-1.5 px-2 py-1 rounded-lg border ${info.color}`}>
-                                                    {info.text}
-                                                </span>
-                                            );
-                                        })()}
-                                    </div>
-                                )}
+                                    );
+                                })()}
                             </div>
                         </div>
 
