@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, TrendingUp, Clock, Book, Activity, PieChart, FileImage, X, ChevronRight, BarChart, Loader2 } from 'lucide-react';
+import { Sparkles, TrendingUp, Clock, Book, Activity, PieChart, X, ChevronRight, BarChart, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '../lib/utils';
 
@@ -164,13 +164,6 @@ const Dashboard = () => {
                         Agent Status
                     </h2>
                     <div className="space-y-4 mb-6">
-                        <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                            <div className="flex items-center gap-3">
-                                <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_10px_#22c55e]" />
-                                <span className="text-sm font-medium">Discovery Agent</span>
-                            </div>
-                            <span className="text-xs text-gray-500">Idle</span>
-                        </div>
                         <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-primary/20 bg-primary/5">
                             <div className="flex items-center gap-3">
                                 <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_10px_#3b82f6] animate-pulse" />
@@ -187,15 +180,25 @@ const Dashboard = () => {
                         </h3>
 
                         {!analysedData && !isAnalysing ? (
-                            <div className="bg-black/20 border border-dashed border-white/10 rounded-xl p-8 text-center">
-                                <FileImage className="w-8 h-8 text-gray-600 mx-auto mb-3" />
-                                <p className="text-xs text-gray-500 mb-4">Upload research data visualization to analyze</p>
-                                <button
-                                    onClick={handleStartAnalysis}
-                                    className="bg-white/5 hover:bg-white/10 text-white text-xs font-medium py-2 px-4 rounded-lg transition-all border border-white/10"
-                                >
-                                    Select Image
-                                </button>
+                            <div className="bg-black/20 border border-white/10 rounded-xl p-6 text-center">
+                                <PieChart className="w-8 h-8 text-gray-600 mx-auto mb-3" />
+                                <p className="text-xs text-gray-400 mb-4 font-medium uppercase tracking-tight">System Ready for Discovery</p>
+                                <div className="flex flex-col gap-2">
+                                    <button
+                                        onClick={() => navigate('/analytics')}
+                                        className="w-full bg-white/5 hover:bg-white/10 text-white text-xs font-semibold py-2.5 rounded-lg transition-all border border-white/10 flex items-center justify-center gap-2"
+                                    >
+                                        <Activity className="w-3.5 h-3.5 text-primary" />
+                                        View Analytics Status
+                                    </button>
+                                    <button
+                                        onClick={handleStartAnalysis}
+                                        className="w-full bg-primary hover:bg-primary/90 text-black text-xs font-bold py-2.5 rounded-lg transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <BarChart className="w-3.5 h-3.5" />
+                                        Analyse User Analytics
+                                    </button>
+                                </div>
                             </div>
                         ) : isAnalysing ? (
                             <div className="bg-black/20 border border-white/10 rounded-xl p-8 text-center">
