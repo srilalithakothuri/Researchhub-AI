@@ -1,0 +1,30 @@
+# Common
+.venv
+venv
+__pycache__/
+*.pyc
+.env
+.DS_Store
+*.log
+.idea/
+.vscode/
+
+# Backend
+backend/.env
+backend/__pycache__/
+backend/data/*.db
+backend/data/*.sqlite
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+frontend/build_error.txt
+frontend/.github/
+frontend/stats.html
+
+# Artifacts & System
+.gemini/
+.agent/
+brain/
