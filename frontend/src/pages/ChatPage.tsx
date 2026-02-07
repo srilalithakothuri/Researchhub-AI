@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Sparkles, Mic, Search, Plus, Trash2, Loader2 } from 'lucide-react';
+import { Send, Sparkles, Mic, Search, Plus, Trash2, Loader2, Volume2, VolumeX } from 'lucide-react';
 import { cn } from '../lib/utils';
 import api from '../services/api';
 
@@ -25,6 +25,7 @@ const ChatPage = () => {
     const [loading, setLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [isListening, setIsListening] = useState(false);
+    const [speakingId, setSpeakingId] = useState<number | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -40,6 +41,17 @@ const ChatPage = () => {
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
+
+    useEffect(() => {
+        return () => {
+            window.speechSynthesis.cancel();
+        };
+    }, []);
+
+    useEffect(() => {
+        window.speechSynthesis.cancel();
+        setSpeakingId(null);
+    }, [currentChatId]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -146,6 +158,22 @@ const ChatPage = () => {
         recognition.start();
     };
 
+    const toggleSpeech = (text: string, messageId: number) => {
+        if (speakingId === messageId) {
+            window.speechSynthesis.cancel();
+            setSpeakingId(null);
+            return;
+        }
+
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.onend = () => setSpeakingId(null);
+        utterance.onerror = () => setSpeakingId(null);
+
+        setSpeakingId(messageId);
+        window.speechSynthesis.speak(utterance);
+    };
+
     const deleteChat = async (chatId: number) => {
         try {
             await api.delete(`/chat/${chatId}`);
@@ -240,15 +268,35 @@ const ChatPage = () => {
                                         className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                                     >
                                         <div
-                                            className={`max-w-[70%] rounded-2xl p-4 ${msg.role === 'user'
+                                            className={`max-w-[70%] rounded-2xl p-4 relative group/msg ${msg.role === 'user'
                                                 ? 'bg-primary text-black'
                                                 : 'bg-white/5 text-white border border-white/10'
                                                 }`}
                                         >
                                             <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                                            <p className="text-xs mt-2 opacity-60">
-                                                {new Date(msg.timestamp).toLocaleTimeString()}
-                                            </p>
+                                            <div className="flex items-center justify-between mt-2 opacity-60">
+                                                <p className="text-xs">
+                                                    {new Date(msg.timestamp).toLocaleTimeString()}
+                                                </p>
+                                                {msg.role === 'assistant' && (
+                                                    <button
+                                                        onClick={() => toggleSpeech(msg.content, msg.id)}
+                                                        className={cn(
+                                                            "p-1 rounded-md transition-all",
+                                                            speakingId === msg.id
+                                                                ? "text-primary bg-primary/20"
+                                                                : "hover:bg-white/10 text-gray-400"
+                                                        )}
+                                                        title={speakingId === msg.id ? "Stop reading" : "Read aloud"}
+                                                    >
+                                                        {speakingId === msg.id ? (
+                                                            <VolumeX className="w-3.5 h-3.5" />
+                                                        ) : (
+                                                            <Volume2 className="w-3.5 h-3.5" />
+                                                        )}
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
                                     </motion.div>
                                 ))}
