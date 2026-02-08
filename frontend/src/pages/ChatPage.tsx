@@ -24,7 +24,9 @@ const ChatPage = () => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
+    const [searchQuery, setSearchQuery] = useState(''); // For message search
+    const [chatSearchQuery, setChatSearchQuery] = useState(''); // For chat title search
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isListening, setIsListening] = useState(false);
     const [speakingId, setSpeakingId] = useState<number | null>(null);
     const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -237,57 +239,111 @@ const ChatPage = () => {
         msg.content.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    return (
-        <div className="flex h-[calc(100vh-8rem)] gap-4">
-            {/* Sidebar - Chat History */}
-            <div className="w-80 bg-surface/40 backdrop-blur-md border border-white/10 rounded-2xl p-4 flex flex-col">
-                <button
-                    onClick={createNewChat}
-                    className="w-full bg-primary hover:bg-primary/90 text-black font-bold py-3 rounded-xl mb-4 flex items-center justify-center gap-2 transition-all"
-                >
-                    <Plus className="w-5 h-5" />
-                    New Chat
-                </button>
+    const filteredChats = chats.filter((chat) =>
+        chat.title.toLowerCase().includes(chatSearchQuery.toLowerCase())
+    );
 
-                <div className="flex-1 overflow-y-auto space-y-2">
-                    {chats.map((chat) => (
-                        <div
-                            key={chat.id}
-                            onClick={() => setCurrentChatId(chat.id)}
-                            className={`p-3 rounded-lg cursor-pointer transition-all group flex items-center justify-between ${currentChatId === chat.id
-                                ? 'bg-primary/20 border border-primary/30'
-                                : 'bg-white/5 hover:bg-white/10 border border-transparent'
-                                }`}
-                        >
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-white truncate">{chat.title}</p>
-                                <p className="text-xs text-gray-500">
-                                    {new Date(chat.created_at).toLocaleDateString()}
-                                </p>
-                            </div>
+    return (
+        <div className="flex h-[calc(100vh-8rem)] gap-4 relative overflow-hidden">
+            {/* Sidebar - Chat History */}
+            <AnimatePresence>
+                {isSidebarOpen && (
+                    <motion.div
+                        initial={{ x: -320, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        exit={{ x: -320, opacity: 0 }}
+                        className="w-80 bg-surface/60 backdrop-blur-xl border border-white/10 rounded-2xl p-4 flex flex-col absolute inset-y-0 z-50 shadow-2xl"
+                    >
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold text-white">Chat History</h3>
                             <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    deleteChat(chat.id);
-                                }}
-                                className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-500/20 rounded transition-all"
+                                onClick={() => setIsSidebarOpen(false)}
+                                className="p-2 hover:bg-white/10 rounded-lg text-gray-400 transition-all"
                             >
-                                <Trash2 className="w-4 h-4 text-red-400" />
+                                <X className="w-5 h-5" />
                             </button>
                         </div>
-                    ))}
-                </div>
-            </div>
+
+                        <div className="relative mb-4">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                            <input
+                                type="text"
+                                placeholder="Search chats..."
+                                value={chatSearchQuery}
+                                onChange={(e) => setChatSearchQuery(e.target.value)}
+                                className="w-full bg-black/20 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-primary/50"
+                            />
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                            {filteredChats.map((chat) => (
+                                <div
+                                    key={chat.id}
+                                    onClick={() => {
+                                        setCurrentChatId(chat.id);
+                                        setIsSidebarOpen(false);
+                                    }}
+                                    className={`p-3 rounded-xl cursor-pointer transition-all group flex items-center justify-between ${currentChatId === chat.id
+                                        ? 'bg-primary/20 border border-primary/30'
+                                        : 'bg-white/5 hover:bg-white/10 border border-transparent'
+                                        }`}
+                                >
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium text-white truncate">{chat.title}</p>
+                                        <p className="text-[10px] text-gray-500 mt-1">
+                                            {new Date(chat.created_at).toLocaleDateString()}
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            deleteChat(chat.id);
+                                        }}
+                                        className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-500/20 rounded-lg transition-all"
+                                    >
+                                        <Trash2 className="w-4 h-4 text-red-400" />
+                                    </button>
+                                </div>
+                            ))}
+                            {filteredChats.length === 0 && (
+                                <div className="text-center py-8">
+                                    <p className="text-sm text-gray-500">No chats found</p>
+                                </div>
+                            )}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Main Chat Area */}
             <div className="flex-1 bg-surface/40 backdrop-blur-md border border-white/10 rounded-2xl flex flex-col">
                 {currentChatId ? (
                     <>
                         {/* Header */}
-                        <div className="p-4 border-b border-white/10 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <Sparkles className="w-5 h-5 text-primary" />
-                                <h2 className="text-lg font-semibold text-white">Research Assistant</h2>
+                        <div className="p-4 border-b border-white/10 flex items-center justify-between bg-surface/60 backdrop-blur-md sticky top-0 z-40">
+                            <div className="flex items-center gap-4">
+                                <button
+                                    onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                                    className={cn(
+                                        "p-2.5 rounded-xl transition-all border flex items-center gap-2",
+                                        isSidebarOpen
+                                            ? "bg-primary/20 border-primary/30 text-primary"
+                                            : "bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10"
+                                    )}
+                                    title="Chat History"
+                                >
+                                    <Sparkles className="w-5 h-5" />
+                                    <span className="text-sm font-medium">History</span>
+                                </button>
+                                <button
+                                    onClick={createNewChat}
+                                    className="p-2.5 bg-primary hover:bg-primary/90 text-black font-bold rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-primary/20"
+                                >
+                                    <Plus className="w-5 h-5" />
+                                    <span className="text-sm">New Chat</span>
+                                </button>
+                                <div className="h-6 w-px bg-white/10 mx-2" />
+                                <h2 className="text-sm font-semibold text-white/90 hidden md:block">Research Assistant</h2>
                             </div>
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
@@ -296,7 +352,7 @@ const ChatPage = () => {
                                     placeholder="Search messages..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="bg-black/20 border border-white/10 rounded-lg py-2 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-primary/50 w-64"
+                                    className="bg-black/20 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-primary/50 w-48 md:w-64 transition-all"
                                 />
                             </div>
                         </div>
@@ -404,12 +460,36 @@ const ChatPage = () => {
                         </div>
                     </>
                 ) : (
-                    <div className="flex-1 flex items-center justify-center">
-                        <div className="text-center">
-                            <Sparkles className="w-16 h-16 text-primary mx-auto mb-4" />
-                            <h3 className="text-xl font-semibold text-white mb-2">Start a New Conversation</h3>
-                            <p className="text-gray-400">Create a new chat to begin your research journey</p>
-                        </div>
+                    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl p-12 max-w-md w-full"
+                        >
+                            <div className="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                                <Sparkles className="w-10 h-10 text-primary" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-white mb-3">Research hub AI</h3>
+                            <p className="text-gray-400 mb-8 leading-relaxed">
+                                Start a new conversation to explore documents, analyze data, and get research insights.
+                            </p>
+                            <div className="grid grid-cols-2 gap-4">
+                                <button
+                                    onClick={() => setIsSidebarOpen(true)}
+                                    className="flex flex-col items-center gap-3 p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all group"
+                                >
+                                    <Sparkles className="w-6 h-6 text-primary group-hover:scale-110 transition-transform" />
+                                    <span className="text-xs font-medium text-white">View History</span>
+                                </button>
+                                <button
+                                    onClick={createNewChat}
+                                    className="flex flex-col items-center gap-3 p-4 rounded-2xl bg-primary hover:bg-primary/90 border border-primary/10 transition-all group"
+                                >
+                                    <Plus className="w-6 h-6 text-black group-hover:scale-110 transition-transform" />
+                                    <span className="text-xs font-medium text-black">New Chat</span>
+                                </button>
+                            </div>
+                        </motion.div>
                     </div>
                 )}
             </div>
