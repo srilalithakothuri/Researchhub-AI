@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+import base64
 from sqlalchemy.orm import Session
 from database import get_db
 from models.chat import Chat, Message
@@ -51,25 +52,45 @@ def get_chat(chat_id: int, db: Session = Depends(get_db)):
     }
 
 @router.post("/{chat_id}/message", response_model=MessageResponse)
-def send_message(chat_id: int, message: MessageCreate, db: Session = Depends(get_db)):
+def send_message(
+    chat_id: int, 
+    content: str = Form(None),
+    image: UploadFile = File(None),
+    db: Session = Depends(get_db)
+):
     """Send a message and get AI response"""
     chat = db.query(Chat).filter(Chat.id == chat_id).first()
     if not chat:
         raise HTTPException(status_code=404, detail="Chat not found")
     
+    image_base64 = None
+    image_url = None
+    if image:
+        try:
+            image_data = image.file.read()
+            image_base64 = base64.b64encode(image_data).decode('utf-8')
+            # For this demo, we store the base64 string in the DB. 
+            # In production, you'd upload to S3 and store the URL.
+            image_url = f"data:image/jpeg;base64,{image_base64}"
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Failed to process image: {str(e)}")
+
     # Save user message
-    user_message = Message(chat_id=chat_id, role="user", content=message.content)
+    user_message = Message(chat_id=chat_id, role="user", content=content, image_url=image_url)
     db.add(user_message)
     db.commit()
     db.refresh(user_message)
     
     # Get chat history for context
     previous_messages = db.query(Message).filter(Message.chat_id == chat_id).order_by(Message.timestamp).all()
-    context = "\n".join([f"{msg.role}: {msg.content}" for msg in previous_messages[-5:]])  # Last 5 messages
+    context = "\n".join([f"{msg.role}: {msg.content}" for msg in previous_messages[-5:] if msg.content])  # Last 5 messages
     
     # Get AI response
     try:
-        ai_response = research_assistant(message.content, context=context)
+        if image_base64:
+            ai_response = vision_assistant(content or "Analyze this image.", image_base64, context=context)
+        else:
+            ai_response = research_assistant(content, context=context)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI Error: {str(e)}")
     
@@ -81,7 +102,8 @@ def send_message(chat_id: int, message: MessageCreate, db: Session = Depends(get
     
     # Update chat title if it's the first message
     if len(previous_messages) == 1:  # Only user message exists
-        chat.title = message.content[:50] + "..." if len(message.content) > 50 else message.content
+        title_source = content or "Image Analysis"
+        chat.title = title_source[:50] + "..." if len(title_source) > 50 else title_source
         db.commit()
     
     return assistant_message

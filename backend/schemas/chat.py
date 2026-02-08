@@ -3,13 +3,14 @@ from typing import Optional, List
 from datetime import datetime
 
 class MessageCreate(BaseModel):
-    content: str
+    content: Optional[str] = None
 
 class MessageResponse(BaseModel):
     id: int
     chat_id: int
     role: str
-    content: str
+    content: Optional[str] = None
+    image_url: Optional[str] = None
     timestamp: datetime
 
     class Config:

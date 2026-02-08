@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Sparkles, Mic, Search, Plus, Trash2, Loader2, Volume2, VolumeX } from 'lucide-react';
+import { Send, Sparkles, Mic, Search, Plus, Trash2, Loader2, Volume2, VolumeX, Image as ImageIcon, X } from 'lucide-react';
 import { cn } from '../lib/utils';
 import api from '../services/api';
 
@@ -8,6 +8,7 @@ interface Message {
     id: number;
     role: 'user' | 'assistant';
     content: string;
+    image_url?: string;
     timestamp: string;
 }
 
@@ -26,6 +27,9 @@ const ChatPage = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [isListening, setIsListening] = useState(false);
     const [speakingId, setSpeakingId] = useState<number | null>(null);
+    const [selectedImage, setSelectedImage] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -75,6 +79,26 @@ const ChatPage = () => {
         }
     };
 
+    const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setSelectedImage(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const removeImage = () => {
+        setSelectedImage(null);
+        setImagePreview(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+
     const createNewChat = async () => {
         try {
             const response = await api.post('/chat/', { title: 'New Chat' });
@@ -87,10 +111,12 @@ const ChatPage = () => {
     };
 
     const sendMessage = async () => {
-        if (!input.trim() || !currentChatId) return;
+        if ((!input.trim() && !selectedImage) || !currentChatId) return;
 
         const userMessage = input;
+        const currentImage = imagePreview;
         setInput('');
+        removeImage();
         setLoading(true);
 
         // Optimistically add user message
@@ -98,13 +124,18 @@ const ChatPage = () => {
             id: Date.now(),
             role: 'user',
             content: userMessage,
+            image_url: currentImage || undefined,
             timestamp: new Date().toISOString(),
         };
         setMessages([...messages, tempUserMsg]);
 
         try {
-            const response = await api.post(`/chat/${currentChatId}/message`, {
-                content: userMessage,
+            const formData = new FormData();
+            if (userMessage) formData.append('content', userMessage);
+            if (selectedImage) formData.append('image', selectedImage);
+
+            const response = await api.post(`/chat/${currentChatId}/message`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
             });
 
             // Add AI response
@@ -273,30 +304,24 @@ const ChatPage = () => {
                                                 : 'bg-white/5 text-white border border-white/10'
                                                 }`}
                                         >
-                                            <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                                            <div className="flex items-center justify-between mt-2 opacity-60">
-                                                <p className="text-xs">
-                                                    {new Date(msg.timestamp).toLocaleTimeString()}
-                                                </p>
-                                                {msg.role === 'assistant' && (
-                                                    <button
-                                                        onClick={() => toggleSpeech(msg.content, msg.id)}
-                                                        className={cn(
-                                                            "p-1 rounded-md transition-all",
-                                                            speakingId === msg.id
-                                                                ? "text-primary bg-primary/20"
-                                                                : "hover:bg-white/10 text-gray-400"
-                                                        )}
-                                                        title={speakingId === msg.id ? "Stop reading" : "Read aloud"}
-                                                    >
-                                                        {speakingId === msg.id ? (
-                                                            <VolumeX className="w-3.5 h-3.5" />
-                                                        ) : (
-                                                            <Volume2 className="w-3.5 h-3.5" />
-                                                        )}
-                                                    </button>
-                                                )}
-                                            </div>
+                                            {msg.image_url && (
+                                                <div className="mb-3 rounded-lg overflow-hidden border border-black/10">
+                                                    <img src={msg.image_url} alt="Uploaded" className="max-w-full h-auto" />
+                                                </div>
+                                            )}
+                                            <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                                            {msg.role === 'assistant' && (
+                                                <button
+                                                    onClick={() => toggleSpeech(msg.content, msg.id)}
+                                                    className="absolute -right-10 top-2 p-2 rounded-full bg-white/5 hover:bg-white/10 opacity-0 group-hover/msg:opacity-100 transition-all text-gray-400 hover:text-primary"
+                                                >
+                                                    {speakingId === msg.id ? (
+                                                        <VolumeX className="w-4 h-4" />
+                                                    ) : (
+                                                        <Volume2 className="w-4 h-4" />
+                                                    )}
+                                                </button>
+                                            )}
                                         </div>
                                     </motion.div>
                                 ))}
@@ -304,44 +329,60 @@ const ChatPage = () => {
                             <div ref={messagesEndRef} />
                         </div>
 
-                        {/* Input */}
+                        {/* Input Area */}
                         <div className="p-4 border-t border-white/10">
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={toggleVoiceInput}
-                                    className={cn(
-                                        "p-3 rounded-xl transition-all relative overflow-hidden",
-                                        isListening
-                                            ? "bg-primary text-black shadow-[0_0_15px_rgba(167,139,250,0.5)]"
-                                            : "bg-white/5 hover:bg-white/10 text-gray-400"
-                                    )}
-                                >
-                                    <Mic className={cn("w-5 h-5", isListening && "animate-pulse")} />
-                                    {isListening && (
-                                        <motion.div
-                                            layoutId="mic-bg"
-                                            className="absolute inset-0 bg-primary/20 animate-ping"
-                                        />
-                                    )}
-                                </button>
+                            {imagePreview && (
+                                <div className="mb-4 relative inline-block">
+                                    <img src={imagePreview} alt="Preview" className="h-20 w-20 object-cover rounded-lg border border-primary/30" />
+                                    <button
+                                        onClick={removeImage}
+                                        className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600 transition-all"
+                                    >
+                                        <X className="w-3 h-3" />
+                                    </button>
+                                </div>
+                            )}
+                            <div className="flex items-center gap-2">
                                 <input
-                                    type="text"
-                                    value={input}
-                                    onChange={(e) => setInput(e.target.value)}
-                                    onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                                    placeholder="Ask me anything about your research..."
-                                    className="flex-1 bg-black/20 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-primary/50"
-                                    disabled={loading}
+                                    type="file"
+                                    ref={fileInputRef}
+                                    onChange={handleImageSelect}
+                                    accept="image/*"
+                                    className="hidden"
                                 />
                                 <button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className={`p-3 rounded-xl transition-all ${selectedImage ? 'bg-primary/20 text-primary' : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                                        }`}
+                                >
+                                    <ImageIcon className="w-5 h-5" />
+                                </button>
+                                <div className="flex-1 relative">
+                                    <input
+                                        type="text"
+                                        placeholder={selectedImage ? "Add a caption or ask about this image..." : "Ask your research assistant..."}
+                                        value={input}
+                                        onChange={(e) => setInput(e.target.value)}
+                                        onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                                        className="w-full bg-black/20 border border-white/10 rounded-xl py-3 pl-4 pr-12 text-white focus:outline-none focus:border-primary/50"
+                                    />
+                                    <button
+                                        onClick={toggleVoiceInput}
+                                        className={`absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg transition-all ${isListening ? 'text-primary animate-pulse bg-primary/10' : 'text-gray-500 hover:text-white'
+                                            }`}
+                                    >
+                                        <Mic className="w-4 h-4" />
+                                    </button>
+                                </div>
+                                <button
+                                    disabled={loading || (!input.trim() && !selectedImage)}
                                     onClick={sendMessage}
-                                    disabled={loading || !input.trim()}
-                                    className="p-3 bg-primary hover:bg-primary/90 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-black p-3 rounded-xl transition-all shadow-lg shadow-primary/20"
                                 >
                                     {loading ? (
-                                        <Loader2 className="w-5 h-5 text-black animate-spin" />
+                                        <Loader2 className="w-5 h-5 animate-spin" />
                                     ) : (
-                                        <Send className="w-5 h-5 text-black" />
+                                        <Send className="w-5 h-5" />
                                     )}
                                 </button>
                             </div>

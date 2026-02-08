@@ -70,3 +70,34 @@ def research_assistant(query: str, context: str = ""):
     messages.append({"role": "user", "content": query})
     
     return chat_with_llm(messages)
+
+def vision_assistant(query: str, image_base64: str, context: str = ""):
+    """
+    Multimodal assistant for analyzing images.
+    """
+    system_prompt = """You are a Research Vision AI. You analyze research data, charts, 
+    and diagrams provided in images. Provide detailed technical descriptions and insights 
+    based on the visual evidence."""
+    
+    # Vision models use a specific content structure
+    content = []
+    if query:
+        content.append({"type": "text", "text": query})
+    
+    content.append({
+        "type": "image_url",
+        "image_url": {
+            "url": f"data:image/jpeg;base64,{image_base64}"
+        }
+    })
+    
+    messages = [
+        {"role": "system", "content": system_prompt}
+    ]
+    
+    if context:
+        messages.append({"role": "system", "content": f"Context: {context}"})
+        
+    messages.append({"role": "user", "content": content})
+    
+    return chat_with_llm(messages, model="llama-3.2-11b-vision-preview")

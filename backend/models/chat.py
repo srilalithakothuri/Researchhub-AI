@@ -16,5 +16,6 @@ class Message(Base):
     id = Column(Integer, primary_key=True, index=True)
     chat_id = Column(Integer, ForeignKey("chats.id"))
     role = Column(String)  # 'user' or 'assistant'
-    content = Column(Text)
+    content = Column(Text, nullable=True)
+    image_url = Column(Text, nullable=True)
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
