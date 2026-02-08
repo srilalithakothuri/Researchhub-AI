@@ -154,8 +154,8 @@ const ChatPage = () => {
                 detailMsg = JSON.stringify(detail);
             }
 
-            const message = detailMsg.includes('AI Error') || detailMsg.includes('Error')
-                ? `AI Error: ${detailMsg}`
+            const message = detailMsg
+                ? `Error: ${detailMsg}`
                 : 'Failed to send message. Please check the console for details or verify your GROQ_API_KEY in backend/.env';
 
             alert(message);

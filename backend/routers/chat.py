@@ -5,7 +5,7 @@ from database import get_db
 from models.chat import Chat, Message
 from models.user import User
 from schemas.chat import ChatCreate, ChatResponse, MessageCreate, MessageResponse, ChatWithMessages
-from utils.llm import research_assistant, analyze_research_trends
+from utils.llm import research_assistant, analyze_research_trends, vision_assistant
 from typing import List
 
 router = APIRouter(
