@@ -100,4 +100,4 @@ def vision_assistant(query: str, image_base64: str, context: str = ""):
         
     messages.append({"role": "user", "content": content})
     
-    return chat_with_llm(messages, model="llama-3.2-11b-vision-preview")
+    return chat_with_llm(messages, model="meta-llama/llama-4-scout-17b-16e-instruct")

@@ -143,7 +143,22 @@ const ChatPage = () => {
             loadChats(); // Refresh chat list to update title
         } catch (error: any) {
             console.error('Failed to send message:', error);
-            alert(error.response?.data?.detail || 'Failed to send message. Make sure GROQ_API_KEY is set in backend/.env');
+            const detail = error.response?.data?.detail;
+            let detailMsg = '';
+
+            if (typeof detail === 'string') {
+                detailMsg = detail;
+            } else if (Array.isArray(detail)) {
+                detailMsg = detail.map((d: any) => d.msg).join(', ');
+            } else if (typeof detail === 'object' && detail !== null) {
+                detailMsg = JSON.stringify(detail);
+            }
+
+            const message = detailMsg.includes('AI Error') || detailMsg.includes('Error')
+                ? `AI Error: ${detailMsg}`
+                : 'Failed to send message. Please check the console for details or verify your GROQ_API_KEY in backend/.env';
+
+            alert(message);
         } finally {
             setLoading(false);
         }
