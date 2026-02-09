@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 fastapi
 uvicorn
 sqlalchemy
@@ -17,3 +18,24 @@ pypdf2
 langchain
 langchain-community
 sentence-transformers
+=======
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+groq
+chromadb
+pydantic
+pydantic-settings
+python-dotenv
+httpx
+email-validator
+bcrypt==4.0.1
+pypdf2
+langchain
+langchain-community
+sentence-transformers
+>>>>>>> 76740baa8080bcfe7fa25b68292c1f41f340b754

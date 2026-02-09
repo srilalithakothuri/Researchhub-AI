@@ -1,0 +1,7 @@
+
+> frontend@0.0.0 build
+> tsc -b && vite build
+
+src/layouts/DashboardLayout.tsx(11,5): error TS6133: 'LogOut' is declared but its value is never read.
+src/pages/LibraryPage.tsx(17,12): error TS6133: 'loading' is declared but its value is never read.
+src/pages/LibraryPage.tsx(17,21): error TS6133: 'setLoading' is declared but its value is never read.
