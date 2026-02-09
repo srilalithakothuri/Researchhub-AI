@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Upload, FileText, Trash2, Search, Loader2, BookOpen, Users, Calendar, Sparkles, Download, X } from 'lucide-react';
+import { Upload, FileText, Trash2, Search, Loader2, BookOpen, Users, Calendar, Sparkles, Download, X, Tag, FolderOpen, Filter } from 'lucide-react';
 import api from '../services/api';
 
 interface Paper {
@@ -9,6 +9,9 @@ interface Paper {
     authors: string | null;
     file_name: string;
     summary: string | null;
+    category: string | null;
+    tags: string | null;
+    project_id: number | null;
     uploaded_at: string;
 }
 
@@ -17,6 +20,7 @@ const LibraryPage = () => {
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
     const [selectedPaperIds, setSelectedPaperIds] = useState<number[]>([]);
     const [synthesizedReport, setSynthesizedReport] = useState<string | null>(null);
@@ -133,10 +137,17 @@ const LibraryPage = () => {
     };
 
     const filteredPapers = papers.filter(
-        (paper) =>
-            paper.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            paper.authors?.toLowerCase().includes(searchQuery.toLowerCase())
+        (paper) => {
+            const matchesSearch = paper.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                paper.authors?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                paper.tags?.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesCategory = selectedCategory === 'all' || paper.category === selectedCategory;
+            return matchesSearch && matchesCategory;
+        }
     );
+
+    const categories = ['all', ...Array.from(new Set(papers.map(p => p.category).filter(Boolean)))];
+    const allTags = Array.from(new Set(papers.flatMap(p => p.tags?.split(',').map(t => t.trim()) || []))).filter(Boolean);
 
     return (
         <div className="space-y-6">
@@ -156,6 +167,20 @@ const LibraryPage = () => {
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="bg-black/20 border border-white/10 rounded-lg py-2 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-primary/50 w-64"
                         />
+                    </div>
+                    <div className="relative">
+                        <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                        <select
+                            value={selectedCategory}
+                            onChange={(e) => setSelectedCategory(e.target.value)}
+                            className="bg-black/20 border border-white/10 rounded-lg py-2 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-primary/50 appearance-none cursor-pointer"
+                        >
+                            {categories.map(cat => (
+                                <option key={cat} value={cat} className="bg-surface text-white">
+                                    {cat === 'all' ? 'All Categories' : cat}
+                                </option>
+                            ))}
+                        </select>
                     </div>
                 </div>
             </div>
@@ -335,6 +360,28 @@ const LibraryPage = () => {
                             <Calendar className="w-3 h-3" />
                             {new Date(paper.uploaded_at).toLocaleDateString()}
                         </div>
+
+                        {/* Category Badge */}
+                        {paper.category && (
+                            <div className="mb-2">
+                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-primary/20 text-primary text-xs font-medium">
+                                    <FolderOpen className="w-3 h-3" />
+                                    {paper.category}
+                                </span>
+                            </div>
+                        )}
+
+                        {/* Tags */}
+                        {paper.tags && (
+                            <div className="flex flex-wrap gap-1 mb-3">
+                                {paper.tags.split(',').slice(0, 3).map((tag, idx) => (
+                                    <span key={idx} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/5 text-gray-400 text-xs">
+                                        <Tag className="w-2.5 h-2.5" />
+                                        {tag.trim()}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
 
                         {paper.summary && (
                             <p className="text-sm text-gray-400 line-clamp-3 mb-3">{paper.summary}</p>

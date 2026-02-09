@@ -13,6 +13,9 @@ class PaperResponse(BaseModel):
     authors: Optional[str]
     file_name: str
     summary: Optional[str]
+    category: Optional[str]
+    tags: Optional[str]
+    project_id: Optional[int]
     uploaded_at: datetime
 
     class Config:

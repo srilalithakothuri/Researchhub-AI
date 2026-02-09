@@ -12,7 +12,19 @@ class Paper(Base):
     file_path = Column(String)
     file_name = Column(String)
     summary = Column(Text, nullable=True)
+    category = Column(String, nullable=True)  # AI-detected category (e.g., "Machine Learning", "Climate Science")
+    tags = Column(Text, nullable=True)  # Comma-separated tags
+    project_id = Column(Integer, ForeignKey("research_projects.id"), nullable=True)
     uploaded_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class ResearchProject(Base):
+    __tablename__ = "research_projects"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    name = Column(String)
+    description = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 class Task(Base):
     __tablename__ = "tasks"

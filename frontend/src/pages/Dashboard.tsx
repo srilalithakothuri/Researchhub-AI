@@ -63,6 +63,46 @@ const Dashboard = () => {
             metrics: "12 new papers this week",
             impact: "Steady Growth",
             progress: 45
+        },
+        {
+            id: 4,
+            title: "Multimodal Foundation Models",
+            description: "Next-generation AI systems that seamlessly integrate text, images, audio, and video understanding. Research focuses on unified architectures that can perform cross-modal reasoning and generation with unprecedented accuracy.",
+            metrics: "31 new papers this week",
+            impact: "High Impact",
+            progress: 92
+        },
+        {
+            id: 5,
+            title: "Quantum Machine Learning",
+            description: "Leveraging quantum computing principles to enhance classical ML algorithms. Recent breakthroughs in quantum neural networks and variational quantum eigensolvers are opening new possibilities for optimization and pattern recognition.",
+            metrics: "15 new papers this week",
+            impact: "Emerging",
+            progress: 58
+        },
+        {
+            id: 6,
+            title: "Federated Learning for Healthcare",
+            description: "Privacy-preserving machine learning techniques enabling collaborative model training across hospitals without sharing sensitive patient data. Focus on differential privacy and secure aggregation protocols.",
+            metrics: "22 new papers this week",
+            impact: "High Impact",
+            progress: 78
+        },
+        {
+            id: 7,
+            title: "Neural Architecture Search (NAS)",
+            description: "Automated discovery of optimal neural network architectures using evolutionary algorithms and reinforcement learning. Recent advances focus on efficient search strategies and hardware-aware optimization.",
+            metrics: "19 new papers this week",
+            impact: "Steady Growth",
+            progress: 71
+        },
+        {
+            id: 8,
+            title: "Explainable AI in Critical Systems",
+            description: "Developing interpretable AI models for high-stakes applications like medical diagnosis and autonomous vehicles. Research emphasizes attention visualization, counterfactual explanations, and causal reasoning frameworks.",
+            metrics: "27 new papers this week",
+            impact: "High Impact",
+            progress: 88
         }
     ];
 
@@ -121,7 +161,7 @@ const Dashboard = () => {
                     <div className="relative z-10">
                         <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
                             <TrendingUp className="w-5 h-5 text-primary" />
-                            Recent Analytics
+                            Recent Trending Researches
                         </h2>
 
                         <div className="space-y-4">
@@ -170,6 +210,58 @@ const Dashboard = () => {
                                 <span className="text-sm font-medium">Analytics Analyzer</span>
                             </div>
                             <span className="text-xs text-blue-400">Active</span>
+                        </div>
+                        <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-green-500/20 bg-green-500/5">
+                            <div className="flex items-center gap-3">
+                                <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_10px_#22c55e] animate-pulse" />
+                                <span className="text-sm font-medium">Paper Processor</span>
+                            </div>
+                            <span className="text-xs text-green-400">Ready</span>
+                        </div>
+                        <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-purple-500/20 bg-purple-500/5">
+                            <div className="flex items-center gap-3">
+                                <div className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_10px_#a855f7] animate-pulse" />
+                                <span className="text-sm font-medium">Chat Assistant</span>
+                            </div>
+                            <span className="text-xs text-purple-400">Online</span>
+                        </div>
+                    </div>
+
+                    {/* Recent Activity */}
+                    <div className="border-t border-white/5 pt-6 mb-6">
+                        <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-primary" />
+                            Recent Activity
+                        </h3>
+                        <div className="space-y-3">
+                            <div className="flex items-start gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors">
+                                <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5" />
+                                <div className="flex-1">
+                                    <p className="text-xs text-gray-300">Paper uploaded</p>
+                                    <p className="text-[10px] text-gray-500">2 hours ago</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors">
+                                <div className="w-1.5 h-1.5 rounded-full bg-green-500 mt-1.5" />
+                                <div className="flex-1">
+                                    <p className="text-xs text-gray-300">Task completed</p>
+                                    <p className="text-[10px] text-gray-500">5 hours ago</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors">
+                                <div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-1.5" />
+                                <div className="flex-1">
+                                    <p className="text-xs text-gray-300">AI chat session</p>
+                                    <p className="text-[10px] text-gray-500">Yesterday</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors">
+                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5" />
+                                <div className="flex-1">
+                                    <p className="text-xs text-gray-300">Analytics updated</p>
+                                    <p className="text-[10px] text-gray-500">2 days ago</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -295,6 +387,115 @@ const Dashboard = () => {
                     </div>
                 )}
             </AnimatePresence>
+
+            {/* Website Description & Tutorial */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7 }}
+                className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+            >
+                {/* About ResearchHub AI */}
+                <div className="bg-surface/40 backdrop-blur-md border border-white/10 rounded-2xl p-6">
+                    <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                        <Book className="w-5 h-5 text-primary" />
+                        About ResearchHub AI
+                    </h2>
+                    <div className="space-y-3 text-sm text-gray-300 leading-relaxed">
+                        <p>
+                            <span className="text-primary font-semibold">ResearchHub AI</span> is your intelligent research companion, designed to streamline academic workflows and enhance productivity through AI-powered tools.
+                        </p>
+                        <p>
+                            Our platform combines cutting-edge artificial intelligence with intuitive design to help researchers manage papers, analyze data, collaborate with AI assistants, and organize their research journey—all in one place.
+                        </p>
+                        <div className="bg-white/5 border border-white/10 rounded-lg p-4 mt-4">
+                            <h3 className="text-white font-medium mb-2 text-xs uppercase tracking-wide">Key Features</h3>
+                            <ul className="space-y-2 text-xs">
+                                <li className="flex items-start gap-2">
+                                    <span className="text-primary mt-0.5">•</span>
+                                    <span><strong>Smart Library:</strong> Upload, organize, and auto-categorize research papers with AI</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="text-primary mt-0.5">•</span>
+                                    <span><strong>AI Chat:</strong> Discuss research topics with intelligent assistants</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="text-primary mt-0.5">•</span>
+                                    <span><strong>Task Management:</strong> Track research tasks and deadlines</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="text-primary mt-0.5">•</span>
+                                    <span><strong>Analytics:</strong> Monitor productivity with streaks and insights</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                {/* How to Use Tutorial */}
+                <div className="bg-surface/40 backdrop-blur-md border border-white/10 rounded-2xl p-6">
+                    <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                        <Sparkles className="w-5 h-5 text-secondary" />
+                        Quick Start Tutorial
+                    </h2>
+                    <div className="space-y-4">
+                        <div className="flex gap-3">
+                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center text-primary font-bold text-sm">
+                                1
+                            </div>
+                            <div>
+                                <h3 className="text-white font-medium text-sm mb-1">Upload Research Papers</h3>
+                                <p className="text-xs text-gray-400 leading-relaxed">
+                                    Navigate to <strong>Library</strong> → Click <strong>"Choose Files"</strong> → Select multiple PDFs → Click <strong>"Upload All"</strong>. AI will automatically categorize and tag your papers.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center text-primary font-bold text-sm">
+                                2
+                            </div>
+                            <div>
+                                <h3 className="text-white font-medium text-sm mb-1">Chat with AI</h3>
+                                <p className="text-xs text-gray-400 leading-relaxed">
+                                    Go to <strong>AI Chat</strong> → Start a new conversation → Ask questions about your research, get summaries, or brainstorm ideas.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center text-primary font-bold text-sm">
+                                3
+                            </div>
+                            <div>
+                                <h3 className="text-white font-medium text-sm mb-1">Manage Tasks</h3>
+                                <p className="text-xs text-gray-400 leading-relaxed">
+                                    Visit <strong>Tasks</strong> → Click <strong>"New Task"</strong> → Set title, description, due date, and priority → Track your research to-dos.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center text-primary font-bold text-sm">
+                                4
+                            </div>
+                            <div>
+                                <h3 className="text-white font-medium text-sm mb-1">Track Analytics</h3>
+                                <p className="text-xs text-gray-400 leading-relaxed">
+                                    Check <strong>Analytics</strong> to view your work streaks, weekly calendar, hourly productivity, and AI-powered insights.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="bg-primary/10 border border-primary/30 rounded-lg p-3 mt-4">
+                            <p className="text-xs text-primary font-medium flex items-center gap-2">
+                                <Sparkles className="w-3.5 h-3.5" />
+                                <span>Pro Tip: Use the synthesis feature in Library to combine insights from multiple papers!</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </motion.div>
         </div>
     );
 };

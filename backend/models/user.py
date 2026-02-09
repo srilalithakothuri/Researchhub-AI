@@ -11,4 +11,6 @@ class User(Base):
     company = Column(String, nullable=True)
     hashed_password = Column(String)
     is_active = Column(Boolean, default=True)
+    otp = Column(String, nullable=True)
+    otp_expiry = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

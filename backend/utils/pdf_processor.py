@@ -98,6 +98,81 @@ def extract_metadata_from_pdf(text: str) -> dict:
         return {"title": title, "authors": authors}
     except:
         return {"title": "Unknown", "authors": "Unknown"}
+
+def extract_category_and_tags(text: str, summary: str) -> dict:
+    """Extract research category and relevant tags using AI"""
+    try:
+        text_sample = text[:3000] if len(text) > 3000 else text
+        
+        messages = [
+            {
+                "role": "system",
+                "content": """You are a research categorization expert. Analyze the research paper and:
+1. Assign ONE primary category from: Machine Learning, Artificial Intelligence, Climate Science, Medical Research, Physics, Chemistry, Biology, Computer Science, Mathematics, Social Science, Engineering, Other
+2. Generate 3-5 relevant tags (keywords) that describe the research
+
+Return ONLY in this exact format:
+Category: [category]
+Tags: [tag1, tag2, tag3, tag4, tag5]"""
+            },
+            {
+                "role": "user",
+                "content": f"Paper Summary: {summary}\n\nPaper Excerpt: {text_sample}"
+            }
+        ]
+        
+        response = client.chat.completions.create(
+            messages=messages,
+            model="llama-3.3-70b-versatile",
+            temperature=0.2,
+            max_tokens=256
+        )
+        
+        result = response.choices[0].message.content
+        
+        # Parse response
+        category = "Other"
+        tags = []
+        
+        for line in result.split('\n'):
+            if line.startswith("Category:"):
+                category = line.replace("Category:", "").strip()
+            elif line.startswith("Tags:"):
+                tags_str = line.replace("Tags:", "").strip()
+                tags = [tag.strip() for tag in tags_str.split(',')]
+        
+        return {"category": category, "tags": ", ".join(tags)}
+    except Exception as e:
+        print(f"Category/tag extraction failed: {str(e)}")
+        return {"category": "Other", "tags": ""}
+
+def detect_common_theme(summaries: list[str]) -> str:
+    """Detect common research theme across multiple papers to suggest project name"""
+    try:
+        combined = "\n\n".join(summaries[:5])  # Limit to first 5 for performance
+        
+        messages = [
+            {
+                "role": "system",
+                "content": "You are a research analyst. Analyze these paper summaries and suggest a SHORT (2-4 words) project name that captures the common theme. Return ONLY the project name, nothing else."
+            },
+            {
+                "role": "user",
+                "content": f"Paper summaries:\n\n{combined}"
+            }
+        ]
+        
+        response = client.chat.completions.create(
+            messages=messages,
+            model="llama-3.3-70b-versatile",
+            temperature=0.3,
+            max_tokens=50
+        )
+        
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        print(f"Theme detection failed: {str(e)}")
+        return "Research Collection"
 def generate_synthesized_report(summaries: list[str]) -> str:
     """Synthesize multiple research paper summaries into a coherent report"""
     try:

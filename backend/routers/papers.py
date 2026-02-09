@@ -7,7 +7,8 @@ from schemas.paper import PaperResponse
 from utils.pdf_processor import (
     extract_text_from_pdf, chunk_text, summarize_text, 
     extract_metadata_from_pdf, generate_synthesized_report,
-    create_docx_report, create_pdf_report
+    create_docx_report, create_pdf_report,
+    extract_category_and_tags, detect_common_theme
 )
 from utils.vectordb import add_paper_to_vectordb, search_papers, delete_paper_from_vectordb
 from typing import List, Optional
@@ -127,11 +128,14 @@ async def upload_batch(
     titles: List[str] = Form(...),
     db: Session = Depends(get_db)
 ):
-    """Upload multiple PDF research papers with custom titles"""
+    """Upload multiple PDF research papers with AI-powered organization"""
+    from models.paper import ResearchProject
+    
     user_id = get_current_user_id()
     results = []
+    paper_summaries = []
     
-    # Process files and titles in pairs
+    # First pass: Process all files
     for i, file in enumerate(files):
         title = titles[i] if i < len(titles) else file.filename
         if not file.filename.endswith('.pdf'):
@@ -144,19 +148,21 @@ async def upload_batch(
         try:
             print(f"Processing file: {file.filename}")
             text = extract_text_from_pdf(file_path)
-            print(f"Extracted text length: {len(text)}")
             metadata = extract_metadata_from_pdf(text)
-            print(f"Metadata extracted: {metadata}")
             summary = summarize_text(text)
-            print(f"Summary generated: {summary[:50]}...")
+            
+            # AI-powered categorization and tagging
+            cat_tags = extract_category_and_tags(text, summary)
             
             paper = Paper(
                 user_id=user_id,
-                title=title,  # Use custom title from user
+                title=title,
                 authors=metadata['authors'],
                 file_path=file_path,
                 file_name=file.filename,
-                summary=summary
+                summary=summary,
+                category=cat_tags['category'],
+                tags=cat_tags['tags']
             )
             db.add(paper)
             db.commit()
@@ -167,12 +173,37 @@ async def upload_batch(
             add_paper_to_vectordb(paper.id, chunks, metadatas)
             
             results.append(paper)
+            paper_summaries.append(summary)
         except Exception as e:
             if os.path.exists(file_path):
                 os.remove(file_path)
             print(f"Failed to process {file.filename}: {str(e)}")
-            # We don't raise here, just skip and continue to allow partial success
             continue
+    
+    # Second pass: Group related papers into a project if multiple files uploaded
+    if len(results) > 1:
+        try:
+            # Detect common theme
+            project_name = detect_common_theme(paper_summaries)
+            
+            # Create or find project
+            project = ResearchProject(
+                user_id=user_id,
+                name=project_name,
+                description=f"Auto-generated project from {len(results)} uploaded papers"
+            )
+            db.add(project)
+            db.commit()
+            db.refresh(project)
+            
+            # Associate all papers with this project
+            for paper in results:
+                paper.project_id = project.id
+            db.commit()
+            
+            print(f"Created project '{project_name}' with {len(results)} papers")
+        except Exception as e:
+            print(f"Project grouping failed: {str(e)}")
             
     return results
 

@@ -14,6 +14,18 @@ class UserUpdate(BaseModel):
     company: Optional[str] = None
     password: Optional[str] = None
 
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class VerifyOTPRequest(BaseModel):
+    email: EmailStr
+    otp: str
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    otp: str
+    new_password: str
+
 class UserLogin(BaseModel):
     email: EmailStr
     password: str

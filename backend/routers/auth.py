@@ -1,11 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database import get_db
+import random
+from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from typing import Annotated
 from models.user import User
-from schemas.user import UserCreate, UserLogin, Token, UserResponse, UserUpdate
+from schemas.user import UserCreate, UserLogin, Token, UserResponse, UserUpdate, ForgotPasswordRequest, VerifyOTPRequest, ResetPasswordRequest
 from utils.security import verify_password, get_password_hash, create_access_token
+from utils.email import send_otp_email
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 router = APIRouter(
@@ -79,3 +82,57 @@ def update_me(
     db.commit()
     db.refresh(current_user)
     return current_user
+
+@router.post("/forgot-password")
+def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == request.email).first()
+    if not user:
+        # Return success even if user doesn't exist (security best practice)
+        return {"message": "If the email exists, an OTP has been sent"}
+    
+    # Generate 6-digit OTP
+    otp = str(random.randint(100000, 999999))
+    user.otp = otp
+    user.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
+    
+    db.commit()
+    
+    # Send OTP via email
+    send_otp_email(user.email, otp)
+    
+    return {"message": "If the email exists, an OTP has been sent"}
+
+@router.post("/verify-otp")
+def verify_otp(request: VerifyOTPRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == request.email).first()
+    if not user or not user.otp or not user.otp_expiry:
+        raise HTTPException(status_code=400, detail="Invalid OTP or email")
+    
+    if datetime.utcnow() > user.otp_expiry:
+        raise HTTPException(status_code=400, detail="OTP has expired")
+    
+    if user.otp != request.otp:
+        raise HTTPException(status_code=400, detail="Invalid OTP")
+    
+    return {"message": "OTP verified successfully"}
+
+@router.post("/reset-password")
+def reset_password(request: ResetPasswordRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == request.email).first()
+    if not user or not user.otp or not user.otp_expiry:
+        raise HTTPException(status_code=400, detail="Invalid OTP or email")
+    
+    if datetime.utcnow() > user.otp_expiry:
+        raise HTTPException(status_code=400, detail="OTP has expired")
+    
+    if user.otp != request.otp:
+        raise HTTPException(status_code=400, detail="Invalid OTP")
+    
+    # Update password and clear OTP
+    user.hashed_password = get_password_hash(request.new_password)
+    user.otp = None
+    user.otp_expiry = None
+    
+    db.commit()
+    
+    return {"message": "Password reset successfully"}
