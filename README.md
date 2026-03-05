@@ -17,6 +17,15 @@ A scalable, AI-powered research assistant platform built with **FastAPI**, **Gro
 - **Research Assistant** - Specialized AI agent for research queries
 - **Trend Analyzer** - Analyze research trends and patterns
 
+### 📚 Library & Discovery
+- **Global Search** - Search across all downloaded papers and notes from anywhere in the app
+- **My Library** - Centralized hub for reading, managing, and categorizing uploaded research papers
+
+### 📝 Paper Guide & Templates
+- **Interactive Guide** - Comprehensive walkthrough for writing each section of a research paper
+- **AI Enhance & Humanize** - Use AI to dynamically suggest improvements, expand text, or humanize phrasing
+- **Pre-submission Checklist** - Track completion of essential paper requirements before publication
+
 ### 🎨 UI/UX
 - **Space Theme** - Lavender + Black futuristic design
 - **Dark Mode** by default
@@ -105,6 +114,8 @@ The app will be available at `http://localhost:5173`
 3. **Navigate to Chat** from the sidebar
 4. **Click "New Chat"** to start a conversation
 5. **Ask research questions** and get AI-powered responses
+6. **Visit My Library** to manage and easily search your research papers
+7. **Use the Paper Guide** to draft your own papers section by section with dynamic AI assistance
 
 ## 📚 API Documentation
 
@@ -183,7 +194,9 @@ ResearchHub-AI/
 │   │   │   ├── Login.tsx
 │   │   │   ├── Register.tsx
 │   │   │   ├── Dashboard.tsx
-│   │   │   └── ChatPage.tsx
+│   │   │   ├── ChatPage.tsx
+│   │   │   ├── LibraryPage.tsx
+│   │   │   └── PaperGuidePage.tsx
 │   │   ├── services/        # API services
 │   │   │   ├── api.ts
 │   │   │   └── auth.ts
