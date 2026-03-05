@@ -10,6 +10,7 @@ import TasksPage from './pages/TasksPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import DocSpacePage from './pages/DocSpacePage';
 import ProfilePage from './pages/ProfilePage';
+import PaperGuidePage from './pages/PaperGuidePage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -29,6 +30,7 @@ function App() {
           <Route path="chat" element={<ChatPage />} />
           <Route path="library" element={<LibraryPage />} />
           <Route path="docs" element={<DocSpacePage />} />
+          <Route path="guide" element={<PaperGuidePage />} />
           <Route path="tasks" element={<TasksPage />} />
           <Route path="analytics" element={<AnalyticsPage />} />
           <Route path="profile" element={<ProfilePage />} />

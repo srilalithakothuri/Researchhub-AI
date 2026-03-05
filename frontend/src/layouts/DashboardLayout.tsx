@@ -61,6 +61,7 @@ const DashboardLayout = () => {
                     <SidebarItem icon={MessageSquare} label="AI Chat" to="/chat" />
                     <SidebarItem icon={BookOpen} label="My Library" to="/library" />
                     <SidebarItem icon={FileText} label="DocSpace" to="/docs" />
+                    <SidebarItem icon={FileText} label="Paper Guide" to="/guide" />
                     <SidebarItem icon={CalendarCheck} label="Tasks" to="/tasks" />
                     <SidebarItem icon={TrendingUp} label="Analytics" to="/analytics" />
                 </nav>
